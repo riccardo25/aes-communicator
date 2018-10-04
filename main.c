@@ -48,6 +48,14 @@ int main(){
 
     close_communication();
 
+
+    fprintf(stderr, "DATA CRYPTED: ");
+    for ( int i = 0; i < 16; i++ )
+    {
+                
+        fprintf(stderr, "%02x", dataout[i]);
+    }
+    fprintf(stderr, "\n");
     
 
     return 0;
