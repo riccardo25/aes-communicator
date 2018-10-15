@@ -40,7 +40,7 @@
     int open_communication(char *portname);
 
     // Communicate with board  to crypt data
-    int board_crypt(uint8_t *in, unsigned int len_in, uint8_t *out, unsigned int len_out, uint8_t key[32], unsigned int key_bits, unsigned int enc);
+    int board_crypt(uint8_t *in, unsigned int len_in, uint8_t *out, unsigned int len_out, uint8_t key[32], unsigned int key_bits, unsigned int enc0, unsigned int enc1);
 
     // Close communication
     void close_communication();

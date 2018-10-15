@@ -27,7 +27,7 @@ int open_communication(char *portname)
 //return -1 bed params
 //if len not multiple of 4*Nb, zeros will be added at the end
 //len_in coud what you want, but len_outmust be multiple of Nb*4 and >= len_in
-int board_crypt(uint8_t *in, unsigned int len_in, uint8_t *out, unsigned int len_out, uint8_t key[32], unsigned int key_bits, unsigned int enc){
+int board_crypt(uint8_t *in, unsigned int len_in, uint8_t *out, unsigned int len_out, uint8_t key[32], unsigned int key_bits, unsigned int enc0, unsigned int enc1){
 
     //control parameters
     if(len_in == 0 || (key_bits != 128 && key_bits != 192 && key_bits != 256 ) || len_out < len_in || len_out % 4*Nb != 0)
@@ -63,7 +63,11 @@ int board_crypt(uint8_t *in, unsigned int len_in, uint8_t *out, unsigned int len
 
         output = out + i * 4 * Nb;
 
-        if(enc == 1)
+        if(enc0 == 1 && i == 0)
+            towrite[0] = (uint8_t) 0x01;
+        else if(i == 0)
+            towrite[0] = (uint8_t) 0x02;
+        else if(enc1 == 1)
             towrite[0] = (uint8_t) 0x01;
         else
             towrite[0] = (uint8_t) 0x02;
@@ -83,7 +87,7 @@ int board_crypt(uint8_t *in, unsigned int len_in, uint8_t *out, unsigned int len
         
 
         for (int p = 0; p < Nb*4; p++){
-            towrite[35+p] =  (uint8_t) in[p];
+            towrite[35+p] =  (uint8_t) in[i*16+p];
         }
 
         fprintf(stderr, "Send: ");
@@ -93,29 +97,33 @@ int board_crypt(uint8_t *in, unsigned int len_in, uint8_t *out, unsigned int len
         }
         fprintf(stderr, "\n");
 
+
         write (fd, towrite, 51);
-
-        uint8_t buf [100];
-        int recived = read (fd, buf, sizeof buf);
-
-        fprintf(stderr, "Recived data: %d\n", recived);
-
-        if(recived > 0) {
-            fprintf(stderr, "Recived: ");
-            for ( int i = 0; i < recived; i++ )
-            {
-                
-                fprintf(stderr, "%02x", buf[i]);
-            }
-            fprintf(stderr, "\n");
-        }
-
-        for (int p = 0; p < 16 && 2 + p < recived; p++){
-            out[ (N - 1) * 16 + p ] = buf[ 2 + p];
-        }
-
+        //sleep(1);
 
     }
+
+
+    
+    
+    uint8_t buf [100];
+    int recived = read (fd, buf, sizeof buf);
+    fprintf(stderr, "N: %d Recived data: %d\n",N, recived);
+    
+    if(recived > 0) {
+        fprintf(stderr, "Recived: ");
+        for ( int i = 0; i < recived; i++ )
+        {
+            fprintf(stderr, "%02x", buf[i]);
+        }
+        fprintf(stderr, "\n");
+    }
+
+    for (int i=0 ; i< N; i++)
+        for (int p = 0; p < 16 &&  (i*16) + 2*(i+1) + p < recived; p++){
+         out[ i * 16 + p ] = buf[ (i*16) + 2*(i+1) + p];
+        }
+    
 
     return 0;
 }
